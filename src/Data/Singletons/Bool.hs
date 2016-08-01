@@ -4,18 +4,24 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
+#if __GLASGOW_HASKELL__ >= 800
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 module Data.Singletons.Bool (
     SBool(..),
     SBoolI(..),
-    -- * Data.Type.Bool
+    -- * Data.Type.Bool and .Equality
     -- | These are only defined with @base >= 4.7@
 #if MIN_VERSION_base(4,7,0)
     sboolAnd, sboolOr, sboolNot,
+    eqToRefl, eqCast, trivialRefl,
 #endif
     ) where
 
 #if MIN_VERSION_base(4,7,0)
 import           Data.Type.Bool
+import           Data.Type.Equality
+import           Unsafe.Coerce      (unsafeCoerce)
 #endif
 
 data SBool (b :: Bool) where
@@ -42,4 +48,16 @@ sboolOr SFalse b = b
 sboolNot :: SBool a -> SBool (Not a)
 sboolNot STrue  = SFalse
 sboolNot SFalse = STrue
+
+-- | @since 0.1.1.0
+eqToRefl :: (a == b) ~ 'True => a :~: b
+eqToRefl = unsafeCoerce trivialRefl
+
+-- | @since 0.1.1.0
+eqCast :: (a == b) ~ 'True => a -> b
+eqCast = unsafeCoerce
+
+-- | @since 0.1.1.0
+trivialRefl :: () :~: ()
+trivialRefl = Refl
 #endif

@@ -3,7 +3,7 @@
 -- see: https://github.com/sol/hpack
 
 name:           singleton-bool
-version:        0.1.0.0
+version:        0.1.1.0
 synopsis:       Type level booleans
 description:    Type level booleans.
                 .
@@ -21,6 +21,7 @@ build-type:     Simple
 cabal-version:  >= 1.10
 
 extra-source-files:
+  CHANGELOG.md
   README.md
 
 source-repository head

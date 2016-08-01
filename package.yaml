@@ -1,5 +1,5 @@
 name: singleton-bool
-version: 0.1.0.0
+version: 0.1.1.0
 synopsis: Type level booleans
 description: |
   Type level booleans.
@@ -14,6 +14,7 @@ category: Web
 tested-with: GHC==7.4.2, GHC==7.6.3, GHC==7.8.4, GHC==7.10.3, GHC==8.0.1
 extra-source-files:
 - README.md
+- CHANGELOG.md
 
 ghc-options: -Wall
 
