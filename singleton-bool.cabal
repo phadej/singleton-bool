@@ -1,9 +1,9 @@
--- This file has been generated from package.yaml by hpack version 0.14.0.
+-- This file has been generated from package.yaml by hpack version 0.14.1.
 --
 -- see: https://github.com/sol/hpack
 
 name:           singleton-bool
-version:        0.1.1.0
+version:        0.1.2.0
 synopsis:       Type level booleans
 description:    Type level booleans.
                 .

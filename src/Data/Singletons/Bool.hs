@@ -4,8 +4,14 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
+#if __GLASGOW_HASKELL__ >= 706
+{-# LANGUAGE PolyKinds           #-}
+#endif
 #if __GLASGOW_HASKELL__ >= 800
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
+#if MIN_VERSION_base(4,7,0)
+{-# LANGUAGE FlexibleContexts #-}
 #endif
 module Data.Singletons.Bool (
     SBool(..),
@@ -14,7 +20,8 @@ module Data.Singletons.Bool (
     -- | These are only defined with @base >= 4.7@
 #if MIN_VERSION_base(4,7,0)
     sboolAnd, sboolOr, sboolNot,
-    eqToRefl, eqCast, trivialRefl,
+    eqToRefl, eqCast, sboolEqRefl,
+    trivialRefl,
 #endif
     ) where
 
@@ -60,4 +67,12 @@ eqCast = unsafeCoerce
 -- | @since 0.1.1.0
 trivialRefl :: () :~: ()
 trivialRefl = Refl
+
+-- | Useful combination of 'sbool' and 'eqToRefl'
+--
+-- @since 0.1.2.0
+sboolEqRefl :: forall (a :: k) (b :: k). SBoolI (a == b) => Maybe (a :~: b)
+sboolEqRefl = case sbool :: SBool (a == b) of
+    STrue  -> Just eqToRefl
+    SFalse -> Nothing
 #endif
