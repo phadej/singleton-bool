@@ -1,5 +1,6 @@
 dist/
-dist-new/
+dist-newstyle/
+.ghc-environment.*
 .stack-work/
 .cabal-sandbox
 cabal.sandbox.config
