@@ -2,20 +2,22 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE PolyKinds           #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
-#if __GLASGOW_HASKELL__ >= 706
-{-# LANGUAGE PolyKinds           #-}
-#endif
 #if __GLASGOW_HASKELL__ >= 800
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 #endif
 #if MIN_VERSION_base(4,7,0)
 {-# LANGUAGE FlexibleContexts #-}
 #endif
+-- | Additions to "Data.Type.Bool".
 module Data.Singletons.Bool (
     SBool(..),
     SBoolI(..),
+    reflectBool,
+    reifyBool,
     -- * Data.Type.Bool and .Equality
     -- | These are only defined with @base >= 4.7@
 #if MIN_VERSION_base(4,7,0)
@@ -31,6 +33,8 @@ import           Data.Type.Equality
 import           Unsafe.Coerce      (unsafeCoerce)
 #endif
 
+import Data.Proxy (Proxy (..))
+
 data SBool (b :: Bool) where
     STrue  :: SBool 'True
     SFalse :: SBool 'False
@@ -38,6 +42,24 @@ data SBool (b :: Bool) where
 class    SBoolI (b :: Bool) where sbool :: SBool b
 instance SBoolI 'True       where sbool = STrue
 instance SBoolI 'False      where sbool = SFalse
+
+-------------------------------------------------------------------------------
+-- reify & reflect
+-------------------------------------------------------------------------------
+
+-- | Reify 'Bool'.
+--
+-- >>> reifyBool True reflectBool
+-- True
+--
+reifyBool :: forall r. Bool -> (forall b. SBoolI b => Proxy b -> r) -> r
+reifyBool True  f = f (Proxy :: Proxy 'True)
+reifyBool False f = f (Proxy :: Proxy 'False)
+
+reflectBool :: forall b proxy. SBoolI b => proxy b -> Bool
+reflectBool _ = case sbool :: SBool b of
+    STrue  -> True
+    SFalse -> False
 
 -------------------------------------------------------------------------------
 -- Witnesses
