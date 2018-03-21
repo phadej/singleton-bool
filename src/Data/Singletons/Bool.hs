@@ -51,7 +51,7 @@ instance SBoolI 'False      where sbool = SFalse
 
 -- | Convert an 'SBool' to the corresponding 'Bool'.
 --
--- @since next
+-- @since 0.1.4
 fromSBool :: SBool b -> Bool
 fromSBool STrue  = True
 fromSBool SFalse = False
@@ -61,7 +61,7 @@ fromSBool SFalse = False
 -- >>> withSomeSBool True fromSBool
 -- True
 --
--- @since next
+-- @since 0.1.4
 withSomeSBool :: Bool -> (forall b. SBool b -> r) -> r
 withSomeSBool True  f = f STrue
 withSomeSBool False f = f SFalse
