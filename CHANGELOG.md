@@ -1,3 +1,6 @@
+- next
+    - Add `fromSBool` and `withSomeSBool`.
+
 - 0.1.3.0
     - Add `reifyBool` and `reflectBool`.
     - Drop GHC-7.4 support (broken `PolyKinds`)

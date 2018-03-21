@@ -16,6 +16,8 @@
 module Data.Singletons.Bool (
     SBool(..),
     SBoolI(..),
+    fromSBool,
+    withSomeSBool,
     reflectBool,
     reifyBool,
     -- * Data.Type.Bool and .Equality
@@ -42,6 +44,27 @@ data SBool (b :: Bool) where
 class    SBoolI (b :: Bool) where sbool :: SBool b
 instance SBoolI 'True       where sbool = STrue
 instance SBoolI 'False      where sbool = SFalse
+
+-------------------------------------------------------------------------------
+-- conversion to and from explicit SBool values
+-------------------------------------------------------------------------------
+
+-- | Convert an 'SBool' to the corresponding 'Bool'.
+--
+-- @since next
+fromSBool :: SBool b -> Bool
+fromSBool STrue  = True
+fromSBool SFalse = False
+
+-- | Convert a normal 'Bool' to an 'SBool', passing it into a continuation.
+--
+-- >>> withSomeSBool True fromSBool
+-- True
+--
+-- @since next
+withSomeSBool :: Bool -> (forall b. SBool b -> r) -> r
+withSomeSBool True  f = f STrue
+withSomeSBool False f = f SFalse
 
 -------------------------------------------------------------------------------
 -- reify & reflect
