@@ -1,4 +1,4 @@
-- next
+- 0.1.4
     - Add `fromSBool` and `withSomeSBool`.
 
 - 0.1.3.0
