@@ -113,10 +113,22 @@ eqCast = unsafeCoerce
 trivialRefl :: () :~: ()
 trivialRefl = Refl
 
+-- GHC 8.10+ requires that all kind variables be explicitly quantified after
+-- a `forall`. Technically, GHC has had the ability to do this since GHC 8.0,
+-- but GHC 8.0-8.4 require enabling TypeInType to do. To avoid having to faff
+-- around with CPP to enable TypeInType on certain GHC versions, we only
+-- explicitly quantify kind variables on GHC 8.6 or later, since those versions
+-- do not require TypeInType, only PolyKinds.
+# if __GLASGOW_HASKELL__ >= 806
+#  define KVS(kvs) kvs
+# else
+#  define KVS(kvs)
+# endif
+
 -- | Useful combination of 'sbool' and 'eqToRefl'
 --
 -- @since 0.1.2.0
-sboolEqRefl :: forall (a :: k) (b :: k). SBoolI (a == b) => Maybe (a :~: b)
+sboolEqRefl :: forall KVS(k) (a :: k) (b :: k). SBoolI (a == b) => Maybe (a :~: b)
 sboolEqRefl = case sbool :: SBool (a == b) of
     STrue  -> Just eqToRefl
     SFalse -> Nothing
