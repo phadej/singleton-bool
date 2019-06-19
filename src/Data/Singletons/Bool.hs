@@ -10,6 +10,7 @@
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 #endif
 #if MIN_VERSION_base(4,7,0)
+{-# LANGUAGE EmptyCase        #-}
 {-# LANGUAGE FlexibleContexts #-}
 #endif
 -- | Additions to "Data.Type.Bool".
@@ -20,6 +21,11 @@ module Data.Singletons.Bool (
     withSomeSBool,
     reflectBool,
     reifyBool,
+    -- * Data.Type.Dec
+#if MIN_VERSION_base(4,7,0)
+    -- | 'discreteBool' is available with @base >= 4.7@ (GHC-7.8)
+    discreteBool,
+#endif
     -- * Data.Type.Bool and .Equality
     -- | These are only defined with @base >= 4.7@
 #if MIN_VERSION_base(4,7,0)
@@ -31,11 +37,16 @@ module Data.Singletons.Bool (
 
 #if MIN_VERSION_base(4,7,0)
 import           Data.Type.Bool
+import           Data.Type.Dec      (Dec (..))
 import           Data.Type.Equality
 import           Unsafe.Coerce      (unsafeCoerce)
 #endif
 
 import Data.Proxy (Proxy (..))
+
+-- $setup
+-- >>> :set -XDataKinds -XTypeOperators
+-- >>> import Data.Type.Dec (decShow)
 
 data SBool (b :: Bool) where
     STrue  :: SBool 'True
@@ -44,6 +55,19 @@ data SBool (b :: Bool) where
 class    SBoolI (b :: Bool) where sbool :: SBool b
 instance SBoolI 'True       where sbool = STrue
 instance SBoolI 'False      where sbool = SFalse
+
+-- | @since 0.1.5
+instance Show (SBool b) where
+    showsPrec _ STrue  = showString "STrue"
+    showsPrec _ SFalse = showString "SFalse"
+
+-- | @since 0.1.5
+instance Eq (SBool b) where
+    _ == _ = True
+
+-- | @since 0.1.5
+instance Ord (SBool b) where
+    compare _ _ = EQ
 
 -------------------------------------------------------------------------------
 -- conversion to and from explicit SBool values
@@ -70,7 +94,7 @@ withSomeSBool False f = f SFalse
 -- reify & reflect
 -------------------------------------------------------------------------------
 
--- | Reify 'Bool'.
+-- | Reify 'Bool' to type-level.
 --
 -- >>> reifyBool True reflectBool
 -- True
@@ -79,16 +103,39 @@ reifyBool :: forall r. Bool -> (forall b. SBoolI b => Proxy b -> r) -> r
 reifyBool True  f = f (Proxy :: Proxy 'True)
 reifyBool False f = f (Proxy :: Proxy 'False)
 
+-- | Reflect to term-level.
+--
+-- >>> reflectBool (Proxy :: Proxy 'True)
+-- True
 reflectBool :: forall b proxy. SBoolI b => proxy b -> Bool
-reflectBool _ = case sbool :: SBool b of
-    STrue  -> True
-    SFalse -> False
+reflectBool _ = fromSBool (sbool :: SBool b)
+
+-------------------------------------------------------------------------------
+-- Discrete
+-------------------------------------------------------------------------------
+
+#if MIN_VERSION_base(4,7,0)
+-- | Decidable equality.
+--
+-- >>> decShow (discreteBool :: Dec ('True :~: 'True))
+-- "Yes Refl"
+--
+-- @since 0.1.5
+discreteBool :: forall a b. (SBoolI a, SBoolI b) => Dec (a :~: b)
+discreteBool = case (sbool :: SBool a, sbool :: SBool b) of
+    (STrue,  STrue)  -> Yes Refl
+    (STrue,  SFalse) -> No $ \p  -> case p of {}
+    (SFalse, STrue)  -> No $ \p  -> case p of {}
+    (SFalse, SFalse) -> Yes Refl
+#endif
 
 -------------------------------------------------------------------------------
 -- Witnesses
 -------------------------------------------------------------------------------
 
 #if MIN_VERSION_base(4,7,0)
+-- | >>> sboolAnd STrue SFalse
+-- SFalse
 sboolAnd :: SBool a -> SBool b -> SBool (a && b)
 sboolAnd SFalse _ = SFalse
 sboolAnd STrue  b = b
