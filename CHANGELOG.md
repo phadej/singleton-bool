@@ -1,3 +1,7 @@
+- 0.1.5
+    - Add `discreteBool :: Dec (a :~: b)` (GHC-7.8+)
+    - Add `Show`, `Eq`, `Ord` `SBool b` instances.
+
 - 0.1.4
     - Add `fromSBool` and `withSomeSBool`.
 
