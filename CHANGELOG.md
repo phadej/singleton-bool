@@ -1,3 +1,9 @@
+- 0.1.6
+    - Add `boring` instances
+    - Add `some` (`GEq` etc) instances
+    - Add `deepseq` instances
+    - Require GHC-7.8+
+
 - 0.1.5
     - Add `discreteBool :: Dec (a :~: b)` (GHC-7.8+)
     - Add `Show`, `Eq`, `Ord` `SBool b` instances.
