@@ -1,5 +1,7 @@
 {-# LANGUAGE CPP                 #-}
 {-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE EmptyCase           #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE PolyKinds           #-}
 {-# LANGUAGE RankNTypes          #-}
@@ -7,10 +9,6 @@
 {-# LANGUAGE TypeOperators       #-}
 #if __GLASGOW_HASKELL__ >= 800
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
-#endif
-#if MIN_VERSION_base(4,7,0)
-{-# LANGUAGE EmptyCase        #-}
-{-# LANGUAGE FlexibleContexts #-}
 #endif
 -- | Additions to "Data.Type.Bool".
 module Data.Singletons.Bool (
@@ -21,31 +19,36 @@ module Data.Singletons.Bool (
     reflectBool,
     reifyBool,
     -- * Data.Type.Dec
-#if MIN_VERSION_base(4,7,0)
     -- | 'discreteBool' is available with @base >= 4.7@ (GHC-7.8)
     discreteBool,
-#endif
     -- * Data.Type.Bool and .Equality
     -- | These are only defined with @base >= 4.7@
-#if MIN_VERSION_base(4,7,0)
     sboolAnd, sboolOr, sboolNot,
     eqToRefl, eqCast, sboolEqRefl,
     trivialRefl,
-#endif
     ) where
 
-#if MIN_VERSION_base(4,7,0)
-import           Data.Type.Bool
-import           Data.Type.Dec      (Dec (..))
-import           Data.Type.Equality
-import           Unsafe.Coerce      (unsafeCoerce)
-#endif
+import Control.DeepSeq    (NFData (..))
+import Data.Boring        (Boring (..))
+import Data.GADT.Compare  (GCompare (..), GEq (..), GOrdering (..))
+import Data.GADT.DeepSeq  (GNFData (..))
+import Data.GADT.Show     (GRead (..), GShow (..))
+import Data.Proxy         (Proxy (..))
+import Data.Type.Bool
+import Data.Type.Dec      (Dec (..))
+import Data.Type.Equality
+import Unsafe.Coerce      (unsafeCoerce)
 
-import Data.Proxy (Proxy (..))
+import qualified Data.Some.Church as Church
 
 -- $setup
 -- >>> :set -XDataKinds -XTypeOperators
--- >>> import Data.Type.Dec (decShow)
+-- >>> import Data.Proxy (Proxy (..))
+-- >>> import Data.Type.Dec
+-- >>> import Data.Some
+-- >>> import Data.GADT.Compare
+-- >>> import Data.GADT.Show
+-- >>> import Data.Type.Equality
 
 data SBool (b :: Bool) where
     STrue  :: SBool 'True
@@ -67,6 +70,11 @@ instance Eq (SBool b) where
 -- | @since 0.1.5
 instance Ord (SBool b) where
     compare _ _ = EQ
+
+-- | @since 0.1.6
+instance NFData (SBool b) where
+    rnf STrue  = ()
+    rnf SFalse = ()
 
 -------------------------------------------------------------------------------
 -- conversion to and from explicit SBool values
@@ -110,10 +118,80 @@ reflectBool :: forall b proxy. SBoolI b => proxy b -> Bool
 reflectBool _ = fromSBool (sbool :: SBool b)
 
 -------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.6
+instance SBoolI b => Boring (SBool b) where
+    boring = sbool
+
+-------------------------------------------------------------------------------
+-- Data.GADT (some)
+-------------------------------------------------------------------------------
+
+-- |
+--
+-- >>> geq STrue STrue
+-- Just Refl
+--
+-- >>> geq STrue SFalse
+-- Nothing
+--
+-- @since 0.1.6
+instance GEq SBool where
+    geq STrue  STrue  = Just Refl
+    geq SFalse SFalse = Just Refl
+    geq _      _      = Nothing
+
+-- |
+--
+-- @since 0.1.6
+instance GCompare SBool where
+    gcompare SFalse SFalse = GEQ
+    gcompare SFalse STrue  = GLT
+    gcompare STrue  SFalse = GGT
+    gcompare STrue  STrue  = GEQ
+
+-- | @since 0.1.6
+instance GNFData SBool where
+    grnf STrue  = ()
+    grnf SFalse = ()
+
+-- |
+--
+-- >>> showsPrec 0 STrue ""
+-- "STrue"
+--
+-- @since 0.1.6
+instance GShow SBool where
+    gshowsPrec = showsPrec
+
+-- |
+--
+-- >>> readsPrec 0 "Some STrue" :: [(Some SBool, String)]
+-- [(Some STrue,"")]
+--
+-- >>> readsPrec 0 "Some SFalse" :: [(Some SBool, String)]
+-- [(Some SFalse,"")]
+--
+-- >>> readsPrec 0 "Some Else" :: [(Some SBool, String)]
+-- []
+--
+-- @since 0.1.6
+instance GRead SBool where
+    greadsPrec _ s =
+        [ (Church.mkSome STrue, t)
+        | ("STrue", t) <- lex s
+        ]
+        ++
+        [ (Church.mkSome SFalse, t)
+        | ("SFalse", t) <- lex s
+        ]
+
+-------------------------------------------------------------------------------
 -- Discrete
 -------------------------------------------------------------------------------
 
-#if MIN_VERSION_base(4,7,0)
 -- | Decidable equality.
 --
 -- >>> decShow (discreteBool :: Dec ('True :~: 'True))
@@ -126,13 +204,11 @@ discreteBool = case (sbool :: SBool a, sbool :: SBool b) of
     (STrue,  SFalse) -> No $ \p  -> case p of {}
     (SFalse, STrue)  -> No $ \p  -> case p of {}
     (SFalse, SFalse) -> Yes Refl
-#endif
 
 -------------------------------------------------------------------------------
 -- Witnesses
 -------------------------------------------------------------------------------
 
-#if MIN_VERSION_base(4,7,0)
 -- | >>> sboolAnd STrue SFalse
 -- SFalse
 sboolAnd :: SBool a -> SBool b -> SBool (a && b)
@@ -178,4 +254,3 @@ sboolEqRefl :: forall KVS(k) (a :: k) (b :: k). SBoolI (a == b) => Maybe (a :~: 
 sboolEqRefl = case sbool :: SBool (a == b) of
     STrue  -> Just eqToRefl
     SFalse -> Nothing
-#endif
