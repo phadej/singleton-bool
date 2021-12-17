@@ -1,6 +1,7 @@
 cabal-version:      >=1.10
 name:               singleton-bool
 version:            0.1.6
+x-revision:         1
 synopsis:           Type level booleans
 description:
   Type level booleans.
