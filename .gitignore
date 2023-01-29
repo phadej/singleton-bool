@@ -6,3 +6,4 @@ dist-newstyle/
 cabal.sandbox.config
 src/style.css
 src/highlight.js
+cabal.project.local
