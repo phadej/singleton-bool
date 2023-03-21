@@ -1,3 +1,6 @@
+- 0.1.7
+    - Add EqP and OrdP instances
+
 - 0.1.6
     - Add `boring` instances
     - Add `some` (`GEq` etc) instances
