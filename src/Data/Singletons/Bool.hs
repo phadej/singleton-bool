@@ -39,6 +39,11 @@ import Data.Type.Dec      (Dec (..))
 import Data.Type.Equality
 import Unsafe.Coerce      (unsafeCoerce)
 
+#if MIN_VERSION_some(1,0,5)
+import Data.EqP  (EqP (..))
+import Data.OrdP (OrdP (..))
+#endif
+
 import qualified Data.Some.Church as Church
 
 -- $setup
@@ -187,6 +192,21 @@ instance GRead SBool where
         [ (Church.mkSome SFalse, t)
         | ("SFalse", t) <- lex s
         ]
+
+#if MIN_VERSION_some(1,0,5)
+-- | @since 0.1.7
+instance EqP SBool where
+    eqp STrue  STrue  = True
+    eqp SFalse SFalse = True
+    eqp _      _      = False
+
+-- | @since 0.1.7
+instance OrdP SBool where
+    comparep STrue  STrue  = EQ
+    comparep SFalse SFalse = EQ
+    comparep STrue  SFalse = GT
+    comparep SFalse STrue  = LT
+#endif
 
 -------------------------------------------------------------------------------
 -- Discrete
