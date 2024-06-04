@@ -1,3 +1,6 @@
+- 0.1.8
+    - Support GHC-8.6.5...9.10.1
+
 - 0.1.7
     - Add EqP and OrdP instances
 

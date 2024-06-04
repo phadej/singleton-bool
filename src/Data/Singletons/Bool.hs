@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE EmptyCase           #-}
 {-# LANGUAGE FlexibleContexts    #-}
@@ -7,9 +6,7 @@
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
-#if __GLASGOW_HASKELL__ >= 800
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
-#endif
 -- | Additions to "Data.Type.Bool".
 module Data.Singletons.Bool (
     SBool(..),
@@ -39,10 +36,8 @@ import Data.Type.Dec      (Dec (..))
 import Data.Type.Equality
 import Unsafe.Coerce      (unsafeCoerce)
 
-#if MIN_VERSION_some(1,0,5)
 import Data.EqP  (EqP (..))
 import Data.OrdP (OrdP (..))
-#endif
 
 import qualified Data.Some.Church as Church
 
@@ -193,7 +188,6 @@ instance GRead SBool where
         | ("SFalse", t) <- lex s
         ]
 
-#if MIN_VERSION_some(1,0,5)
 -- | @since 0.1.7
 instance EqP SBool where
     eqp STrue  STrue  = True
@@ -206,7 +200,6 @@ instance OrdP SBool where
     comparep SFalse SFalse = EQ
     comparep STrue  SFalse = GT
     comparep SFalse STrue  = LT
-#endif
 
 -------------------------------------------------------------------------------
 -- Discrete
@@ -255,22 +248,10 @@ eqCast = unsafeCoerce
 trivialRefl :: () :~: ()
 trivialRefl = Refl
 
--- GHC 8.10+ requires that all kind variables be explicitly quantified after
--- a `forall`. Technically, GHC has had the ability to do this since GHC 8.0,
--- but GHC 8.0-8.4 require enabling TypeInType to do. To avoid having to faff
--- around with CPP to enable TypeInType on certain GHC versions, we only
--- explicitly quantify kind variables on GHC 8.6 or later, since those versions
--- do not require TypeInType, only PolyKinds.
-# if __GLASGOW_HASKELL__ >= 806
-#  define KVS(kvs) kvs
-# else
-#  define KVS(kvs)
-# endif
-
 -- | Useful combination of 'sbool' and 'eqToRefl'
 --
 -- @since 0.1.2.0
-sboolEqRefl :: forall KVS(k) (a :: k) (b :: k). SBoolI (a == b) => Maybe (a :~: b)
+sboolEqRefl :: forall k (a :: k) (b :: k). SBoolI (a == b) => Maybe (a :~: b)
 sboolEqRefl = case sbool :: SBool (a == b) of
     STrue  -> Just eqToRefl
     SFalse -> Nothing
